@@ -261,7 +261,7 @@ renderAdminHeader('Manage Updates', 'updates');
                                     <iframe 
                                         width="300" 
                                         height="200" 
-                                        src="<?= Helpers::escapeHtml($embedUrl) }" 
+src="<?= Helpers::escapeHtml($embedUrl) ?>
                                         frameborder="0" 
                                         allowfullscreen
                                         style="max-width: 100%;"
@@ -273,7 +273,7 @@ renderAdminHeader('Manage Updates', 'updates');
                         <?php elseif ($update['type'] === 'nhl_goal'): ?>
                             <div style="margin-top: 10px;">
                                 <iframe 
-                                    src="<?= Helpers::escapeHtml($update['url']) }" 
+src="<?= Helpers::escapeHtml($update['url']) ?>
                                     height="400" 
                                     style="width: 100%; max-width: 600px; border: 0;" 
                                     allow="clipboard-write *; fullscreen *"
