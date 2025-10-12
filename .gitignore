@@ -1,0 +1,25 @@
+# Environment files
+.env
+
+# Generated files
+/public/current.json
+
+# Development scripts
+seed_dev_data.php
+json_test.php
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

@@ -1,0 +1,481 @@
+/*
+ * NJ Devils Game Day Admin Interface
+ * Color Scheme: Red #CE1126, Black #000, White #FFF, Gray accents
+ */
+
+:root {
+    --devils-red: #CE1126;
+    --devils-black: #000000;
+    --devils-white: #FFFFFF;
+    --gray-light: #f5f5f5;
+    --gray-medium: #888888;
+    --gray-dark: #333333;
+    --success-green: #28a745;
+    --error-red: #dc3545;
+    --warning-yellow: #ffc107;
+}
+
+/* Reset and base styles */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--gray-light);
+    color: var(--devils-black);
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+}
+
+/* Layout */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header */
+.header {
+    background-color: var(--devils-red);
+    color: var(--devils-white);
+    padding: 20px 0;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.header .subtitle {
+    margin: 5px 0 0 0;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+/* Navigation */
+.nav {
+    background-color: var(--devils-black);
+    margin: -30px 0 30px 0;
+    padding: 0;
+    border-radius: 0 0 8px 8px;
+}
+
+.nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.nav li {
+    margin: 0;
+}
+
+.nav a {
+    display: block;
+    padding: 15px 20px;
+    color: var(--devils-white);
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.nav a:hover,
+.nav a.active {
+    background-color: rgba(206, 17, 38, 0.2);
+}
+
+/* Cards */
+.card {
+    background: var(--devils-white);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.card-header {
+    background: var(--devils-black);
+    color: var(--devils-white);
+    padding: 15px 20px;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* Forms */
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--devils-black);
+}
+
+input[type="text"],
+input[type="password"],
+input[type="url"],
+textarea,
+select {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="url"]:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--devils-red);
+    box-shadow: 0 0 0 3px rgba(206, 17, 38, 0.1);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-col {
+    flex: 1;
+}
+
+/* Radio buttons */
+.radio-group {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 5px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.radio-option input[type="radio"] {
+    width: auto;
+    margin: 0;
+}
+
+.radio-option label {
+    margin: 0;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.2s;
+    min-width: 120px;
+}
+
+.btn-primary {
+    background-color: var(--devils-red);
+    color: var(--devils-white);
+}
+
+.btn-primary:hover {
+    background-color: #b30e1f;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: var(--gray-medium);
+    color: var(--devils-white);
+}
+
+.btn-secondary:hover {
+    background-color: var(--gray-dark);
+}
+
+.btn-danger {
+    background-color: var(--error-red);
+    color: var(--devils-white);
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.btn-success {
+    background-color: var(--success-green);
+    color: var(--devils-white);
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-width: auto;
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* Messages */
+.message {
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.message-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.message-error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.message-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+}
+
+/* Tables */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.table th,
+.table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.table th {
+    background-color: var(--gray-light);
+    font-weight: 600;
+    color: var(--devils-black);
+}
+
+.table tr:hover {
+    background-color: rgba(206, 17, 38, 0.05);
+}
+
+/* Status indicators */
+.status-live {
+    display: inline-block;
+    padding: 4px 8px;
+    background-color: var(--devils-red);
+    color: var(--devils-white);
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-inactive {
+    display: inline-block;
+    padding: 4px 8px;
+    background-color: var(--gray-medium);
+    color: var(--devils-white);
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Score display */
+.score {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--devils-red);
+    margin: 10px 0;
+}
+
+.score .vs {
+    color: var(--gray-medium);
+    font-size: 18px;
+    font-weight: 400;
+    margin: 0 15px;
+}
+
+/* Update items */
+.update-item {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: var(--devils-white);
+}
+
+.update-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.update-type {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 3px;
+}
+
+.update-type-html {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.update-type-nhl_goal {
+    background-color: var(--devils-red);
+    color: var(--devils-white);
+}
+
+.update-type-youtube {
+    background-color: #ffebee;
+    color: #d32f2f;
+}
+
+.update-time {
+    color: var(--gray-medium);
+    font-size: 14px;
+}
+
+.update-content {
+    line-height: 1.6;
+}
+
+.update-content a {
+    color: var(--devils-red);
+    text-decoration: none;
+}
+
+.update-content a:hover {
+    text-decoration: underline;
+}
+
+/* Login form */
+.login-container {
+    max-width: 400px;
+    margin: 100px auto;
+    background: var(--devils-white);
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-header h1 {
+    color: var(--devils-red);
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .nav ul {
+        flex-direction: column;
+    }
+    
+    .radio-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .score {
+        font-size: 20px;
+    }
+    
+    .update-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+
+/* Utility classes */
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.mb-0 { margin-bottom: 0 !important; }
+.mb-10 { margin-bottom: 10px !important; }
+.mb-20 { margin-bottom: 20px !important; }
+.mt-20 { margin-top: 20px !important; }
+
+.d-none { display: none; }
+.d-block { display: block; }
+
+.font-weight-bold { font-weight: 600; }
+
+/* Character count indicator */
+.char-count {
+    font-size: 12px;
+    color: var(--gray-medium);
+    text-align: right;
+    margin-top: 5px;
+}
+
+.char-count.over-limit {
+    color: var(--error-red);
+    font-weight: 600;
+}

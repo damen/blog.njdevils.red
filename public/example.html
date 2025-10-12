@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NJ Devils Game Day - Live Updates</title>
+    <style>
+        :root {
+            --devils-red: #CE1126;
+            --devils-black: #000000;
+            --devils-white: #FFFFFF;
+            --gray-light: #f5f5f5;
+            --gray-medium: #888888;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--gray-light);
+            color: var(--devils-black);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background-color: var(--devils-red);
+            color: var(--devils-white);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+        }
+        
+        .header .subtitle {
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .game-card {
+            background: var(--devils-white);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .game-card-header {
+            background: var(--devils-black);
+            color: var(--devils-white);
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+        
+        .game-card-body {
+            padding: 20px;
+        }
+        
+        .status-live {
+            display: inline-block;
+            padding: 4px 12px;
+            background-color: var(--devils-red);
+            color: var(--devils-white);
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+        
+        .status-inactive {
+            display: inline-block;
+            padding: 4px 12px;
+            background-color: var(--gray-medium);
+            color: var(--devils-white);
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+        
+        .score {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--devils-red);
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .score .vs {
+            color: var(--gray-medium);
+            font-size: 24px;
+            font-weight: 400;
+            margin: 0 20px;
+        }
+        
+        .last-updated {
+            text-align: center;
+            color: var(--gray-medium);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .update-item {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: var(--devils-white);
+        }
+        
+        .update-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .update-type {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 3px;
+        }
+        
+        .update-type-html {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .update-type-nhl_goal {
+            background-color: var(--devils-red);
+            color: var(--devils-white);
+        }
+        
+        .update-type-youtube {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .update-time {
+            color: var(--gray-medium);
+            font-size: 14px;
+        }
+        
+        .update-content {
+            line-height: 1.6;
+        }
+        
+        .update-content a {
+            color: var(--devils-red);
+            text-decoration: none;
+        }
+        
+        .update-content a:hover {
+            text-decoration: underline;
+        }
+        
+        .youtube-embed {
+            margin-top: 15px;
+        }
+        
+        .youtube-embed iframe {
+            width: 100%;
+            max-width: 560px;
+            height: 315px;
+            border-radius: 4px;
+        }
+        
+        .nhl-goal-embed {
+            margin-top: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .nhl-goal-embed iframe {
+            width: 100%;
+            height: 825px;
+            border: 0;
+            display: block;
+        }
+        
+        .loading {
+            text-align: center;
+            color: var(--gray-medium);
+            font-style: italic;
+            padding: 40px;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .meta {
+            text-align: center;
+            color: var(--gray-medium);
+            font-size: 12px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .score {
+                font-size: 24px;
+            }
+            
+            .score .vs {
+                font-size: 18px;
+                margin: 0 10px;
+            }
+            
+            .update-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .nhl-goal-embed iframe {
+                height: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>NJ Devils Game Day</h1>
+            <p class="subtitle">Live Game Updates</p>
+        </div>
+        
+        <div id="gameContainer">
+            <div class="loading">Loading game data...</div>
+        </div>
+        
+        <div class="meta">
+            <p>Last refreshed: <span id="lastRefresh">--</span></p>
+            <p>Next refresh: <span id="nextRefresh">60</span> seconds</p>
+        </div>
+    </div>
+    
+    <script>
+        let refreshTimer;
+        let countdownTimer;
+        let countdownSeconds = 60;
+        
+        // YouTube URL to embed URL converter (replicates server-side logic)
+        function youtubeEmbedUrl(url) {
+            const patterns = [
+                /youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/,
+                /youtu\.be\/([a-zA-Z0-9_-]+)/,
+                /youtube\.com\/embed\/([a-zA-Z0-9_-]+)/
+            ];
+            
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match) {
+                    return `https://www.youtube-nocookie.com/embed/${match[1]}`;
+                }
+            }
+            return null;
+        }
+        
+        // Format date/time for display
+        function formatDateTime(isoString) {
+            try {
+                const date = new Date(isoString);
+                if (isNaN(date.getTime())) {
+                    return 'Invalid date';
+                }
+                return date.toLocaleString();
+            } catch (error) {
+                console.error('Date parsing error:', error, isoString);
+                return 'Date unavailable';
+            }
+        }
+        
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Load game data from JSON feed
+        async function loadGameData() {
+            try {
+                const timestamp = Date.now();
+                const response = await fetch(`https://blog.njdevils.red/current.json?t=${timestamp}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Loaded game data:', data); // Debug logging
+                renderGameData(data);
+                
+                document.getElementById('lastRefresh').textContent = new Date().toLocaleTimeString();
+                
+            } catch (error) {
+                console.error('Failed to load game data:', error);
+                let errorMessage = error.message;
+                if (error.name === 'SyntaxError') {
+                    errorMessage = 'Invalid JSON response from server';
+                }
+                document.getElementById('gameContainer').innerHTML = 
+                    `<div class="error">Failed to load game data: ${escapeHtml(errorMessage)}<br><small>Check console for details</small></div>`;
+            }
+        }
+        
+        // Render game data to DOM
+        function renderGameData(data) {
+            const container = document.getElementById('gameContainer');
+            
+            if (data.status === 'no_live_game') {
+                container.innerHTML = `
+                    <div class="game-card">
+                        <div class="game-card-header">Game Status</div>
+                        <div class="game-card-body">
+                            <div class="status-inactive">NO LIVE GAME</div>
+                            <p>No game is currently live. Check back later for live updates.</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            const game = data.game;
+            const updates = data.updates || [];
+            
+            let html = `
+                <div class="game-card">
+                    <div class="game-card-header">Live Game</div>
+                    <div class="game-card-body">
+                        <div class="status-live">LIVE</div>
+                        <h2>${escapeHtml(game.title)}</h2>
+                        
+                        <div class="score">
+                            ${escapeHtml(game.away_team)} ${game.score.away}
+                            <span class="vs">-</span>
+                            ${game.score.home} ${escapeHtml(game.home_team)}
+                        </div>
+                        
+                        <div class="last-updated">
+                            Game last updated: ${formatDateTime(game.last_updated)}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (updates.length > 0) {
+                html += `
+                    <div class="game-card">
+                        <div class="game-card-header">Live Updates (${updates.length})</div>
+                        <div class="game-card-body">
+                `;
+                
+                // Show updates in reverse order (newest first) for display
+                const displayUpdates = [...updates].reverse();
+                
+                for (const update of displayUpdates) {
+                    html += `
+                        <div class="update-item">
+                            <div class="update-header">
+                                <span class="update-type update-type-${update.type}">
+                                    ${update.type.replace('_', ' ').toUpperCase()}
+                                </span>
+                                <span class="update-time">${escapeHtml(update.relative_time)}</span>
+                            </div>
+                            <div class="update-content">
+                    `;
+                    
+                    switch (update.type) {
+                        case 'html':
+                            // HTML is already sanitized server-side, safe to insert
+                            html += update.html;
+                            break;
+                            
+                        case 'nhl_goal':
+                            html += `<a href="${escapeHtml(update.url)}" target="_blank" rel="noopener noreferrer">
+                                ${escapeHtml(update.url)}
+                            </a>`;
+                            
+                            // Add NHL Goal Visualizer iframe
+                            if (update.url && update.url.includes('nhl.com')) {
+                                const iframeId = `goal-embed-${update.id}`;
+                                html += `
+                                    <div class="nhl-goal-embed" style="margin-top: 15px;">
+                                        <iframe 
+                                            id="${iframeId}"
+                                            src="${escapeHtml(update.url)}" 
+                                            height="825" 
+                                            style="width: 100%; border: 0;" 
+                                            allow="clipboard-write *; fullscreen *"
+                                            loading="lazy"
+                                        ></iframe>
+                                    </div>
+                                `;
+                            }
+                            break;
+                            
+                        case 'youtube':
+                            html += `<a href="${escapeHtml(update.url)}" target="_blank" rel="noopener noreferrer">
+                                ${escapeHtml(update.url)}
+                            </a>`;
+                            
+                            // Add YouTube embed if available
+                            const embedUrl = update.embed_url || youtubeEmbedUrl(update.url);
+                            if (embedUrl) {
+                                html += `
+                                    <div class="youtube-embed">
+                                        <iframe 
+                                            src="${escapeHtml(embedUrl)}" 
+                                            frameborder="0" 
+                                            allowfullscreen
+                                            loading="lazy"
+                                        ></iframe>
+                                    </div>
+                                `;
+                            }
+                            break;
+                    }
+                    
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        // Start countdown timer
+        function startCountdown() {
+            countdownSeconds = 60;
+            
+            countdownTimer = setInterval(() => {
+                countdownSeconds--;
+                document.getElementById('nextRefresh').textContent = countdownSeconds;
+                
+                if (countdownSeconds <= 0) {
+                    clearInterval(countdownTimer);
+                }
+            }, 1000);
+        }
+        
+        // Initialize page
+        function init() {
+            // Load initial data
+            loadGameData();
+            
+            // Start countdown
+            startCountdown();
+            
+            // Set up refresh timer (every 60 seconds)
+            refreshTimer = setInterval(() => {
+                window.location.reload();
+            }, 60000);
+        }
+        
+        // Start everything when page loads
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // Clean up timers when page unloads
+        window.addEventListener('beforeunload', () => {
+            if (refreshTimer) clearInterval(refreshTimer);
+            if (countdownTimer) clearInterval(countdownTimer);
+        });
+    </script>
+</body>
+</html>
