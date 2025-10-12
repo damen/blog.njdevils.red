@@ -154,4 +154,71 @@ class Helpers
     {
         return time();
     }
+
+    /**
+     * Save an uploaded image file under public/uploads/YYYY/MM and return its public URL.
+     * Validates MIME type and extension. Creates directories as needed.
+     * 
+     * @param array $file The $_FILES[...] entry
+     * @param string $publicRoot Absolute path to the web root (e.g., __DIR__.'/../public')
+     * @param string $baseUrl Base URL path for uploads (default '/uploads')
+     * @return string Public URL to the saved image
+     * @throws RuntimeException on validation or IO failures
+     */
+    public static function saveUploadedImage(array $file, string $publicRoot, string $baseUrl = '/uploads'): string
+    {
+        if (!isset($file['error']) || is_array($file['error'])) {
+            throw new RuntimeException('Invalid upload parameters.');
+        }
+
+        switch ($file['error']) {
+            case UPLOAD_ERR_OK:
+                break;
+            case UPLOAD_ERR_NO_FILE:
+                throw new RuntimeException('No file sent.');
+            case UPLOAD_ERR_INI_SIZE:
+            case UPLOAD_ERR_FORM_SIZE:
+                throw new RuntimeException('Exceeded file size limit.');
+            default:
+                throw new RuntimeException('Unknown upload error.');
+        }
+
+        // Validate MIME type using finfo
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime = $finfo->file($file['tmp_name']);
+        $allowed = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/gif'  => 'gif',
+            'image/webp' => 'webp',
+        ];
+        if (!isset($allowed[$mime])) {
+            throw new RuntimeException('Unsupported image type.');
+        }
+        $ext = $allowed[$mime];
+
+        // Build destination directory: /uploads/YYYY/MM
+        $year = date('Y');
+        $month = date('m');
+        $relDir = trim($baseUrl, '/');
+        $uploadDir = rtrim($publicRoot, '/').'/'.$relDir.'/'.$year.'/'.$month;
+        if (!is_dir($uploadDir)) {
+            if (!mkdir($uploadDir, 0755, true) && !is_dir($uploadDir)) {
+                throw new RuntimeException('Failed to create upload directory.');
+            }
+        }
+
+        // Generate unique filename
+        $basename = bin2hex(random_bytes(8));
+        $filename = $basename.'.'.$ext;
+        $destPath = $uploadDir.'/'.$filename;
+
+        if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+            throw new RuntimeException('Failed to move uploaded file.');
+        }
+
+        // Return public URL
+        $publicUrl = '/'.$relDir.'/'.$year.'/'.$month.'/'.$filename;
+        return $publicUrl;
+    }
 }

@@ -466,6 +466,16 @@
                                 `;
                             }
                             break;
+                        case 'image':
+                            if (update.url) {
+                                html += `
+                                    <div class="image-update" style="margin-top: 10px;">
+                                        <img src="${escapeHtml(update.url)}" alt="" style="max-width:100%;height:auto;" loading="lazy"/>
+                                        ${update.caption ? `<div style=\"margin-top:6px;\"><em>${escapeHtml(update.caption)}</em></div>` : ''}
+                                    </div>
+                                `;
+                            }
+                            break;
                     }
                     
                     html += `

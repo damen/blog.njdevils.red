@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $url = trim($_POST['url'] ?? '');
                 
                 // Validate update type
-                $validTypes = ['html', 'nhl_goal', 'youtube'];
+                $validTypes = ['html', 'nhl_goal', 'youtube', 'image'];
                 if (!in_array($type, $validTypes)) {
                     $error = 'Invalid update type.';
                     break;
@@ -88,6 +88,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $error = 'Invalid YouTube URL. Must be HTTPS and from an allowed YouTube domain.';
                             break;
                         }
+                        break;
+
+                    case 'image':
+                        // Validate file upload
+                        if (!isset($_FILES['image_file'])) {
+                            $error = 'Image file is required.';
+                            break;
+                        }
+                        try {
+                            $publicRoot = dirname(__DIR__) . '/public';
+                            $imageUrl = Helpers::saveUploadedImage($_FILES['image_file'], $publicRoot, '/uploads');
+                        } catch (Throwable $t) {
+                            $error = 'Image upload failed: ' . $t->getMessage();
+                            break;
+                        }
+                        // Optional caption as plain text, limit 300 chars
+                        $caption = trim($_POST['image_caption'] ?? '');
+                        if (strlen($caption) > 300) {
+                            $caption = substr($caption, 0, 300);
+                        }
+                        $sanitizedContent = $caption; // store caption in content
+                        $sanitizedUrl = $imageUrl;     // store image URL in url
                         break;
                 }
                 
@@ -163,7 +185,7 @@ renderAdminHeader('Manage Updates', 'updates');
 <div class="card">
     <div class="card-header">Add New Update</div>
     <div class="card-body">
-        <form method="POST" id="updateForm">
+        <form method="POST" id="updateForm" enctype="multipart/form-data">
             <?= Auth::csrfField() ?>
             <input type="hidden" name="action" value="add_update">
             
@@ -187,6 +209,12 @@ renderAdminHeader('Manage Updates', 'updates');
                                <?= ($_POST['type'] ?? '') === 'youtube' ? 'checked' : '' ?>
                                onchange="toggleUpdateFields()">
                         <label for="type_youtube">YouTube Video</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="type_image" name="type" value="image"
+                               <?= ($_POST['type'] ?? '') === 'image' ? 'checked' : '' ?>
+                               onchange="toggleUpdateFields()">
+                        <label for="type_image">Image</label>
                     </div>
                 </div>
             </div>
@@ -214,6 +242,14 @@ renderAdminHeader('Manage Updates', 'updates');
                     placeholder="https://"
                 >
                 <small id="url_help" class="form-text"></small>
+            </div>
+
+            <div class="form-group d-none" id="image_field">
+                <label for="image_file">Image file *</label>
+                <input type="file" id="image_file" name="image_file" accept="image/*">
+                <small class="form-text">Allowed types: JPG, PNG, GIF, WEBP</small>
+                <label for="image_caption" style="margin-top:10px;">Caption (optional)</label>
+                <input type="text" id="image_caption" name="image_caption" maxlength="300" placeholder="Enter caption (optional)">
             </div>
             
             <div class="btn-group">
@@ -274,12 +310,19 @@ src="<?= Helpers::escapeHtml($embedUrl) ?>
                         <?php elseif ($update['type'] === 'nhl_goal'): ?>
                             <div style="margin-top: 10px;">
                                 <iframe 
-src="<?= Helpers::escapeHtml($update['url']) ?>
+                                    src="<?= Helpers::escapeHtml($update['url']) ?>"
                                     height="400" 
                                     style="width: 100%; max-width: 600px; border: 0;" 
                                     allow="clipboard-write *; fullscreen *"
                                 ></iframe>
                                 <p><small><em>Goal visualizer will display full-size (825px height) on the live page</em></small></p>
+                            </div>
+                        <?php elseif ($update['type'] === 'image'): ?>
+                            <div style="margin-top:10px;">
+                                <img src="<?= Helpers::escapeHtml($update['url']) ?>" alt="" style="max-width:100%; height:auto; border:1px solid #eee; border-radius:4px;">
+                                <?php if (!empty($update['content'])): ?>
+                                    <div style="margin-top:6px;"><em><?= Helpers::escapeHtml($update['content']) ?></em></div>
+                                <?php endif; ?>
                             </div>
                         <?php endif; ?>
                     <?php endif; ?>
@@ -297,27 +340,36 @@ function toggleUpdateFields() {
     const urlLabel = document.getElementById('url_label');
     const urlHelp = document.getElementById('url_help');
     const urlInput = document.getElementById('url');
+    const imageField = document.getElementById('image_field');
+    const imageInput = document.getElementById('image_file');
+    const imageCaption = document.getElementById('image_caption');
     
     const selectedType = document.querySelector('input[name="type"]:checked').value;
     
+    // Reset field visibility/requirements
+    contentField.classList.add('d-none');
+    urlField.classList.add('d-none');
+    imageField.classList.add('d-none');
+    urlInput.required = false;
+    if (imageInput) imageInput.required = false;
+
     if (selectedType === 'html') {
         contentField.classList.remove('d-none');
-        urlField.classList.add('d-none');
-        urlInput.required = false;
-    } else {
-        contentField.classList.add('d-none');
+    } else if (selectedType === 'nhl_goal' || selectedType === 'youtube') {
         urlField.classList.remove('d-none');
         urlInput.required = true;
-        
         if (selectedType === 'nhl_goal') {
             urlLabel.textContent = 'NHL Goal Visualizer URL *';
             urlHelp.textContent = 'Must be an HTTPS URL from nhl.com (e.g., https://www.nhl.com/ppt-replay/goal/2025020026/875)';
             urlInput.placeholder = 'https://www.nhl.com/ppt-replay/goal/...';
-        } else if (selectedType === 'youtube') {
+        } else {
             urlLabel.textContent = 'YouTube URL *';
             urlHelp.textContent = 'YouTube video URL (youtube.com, youtu.be)';
             urlInput.placeholder = 'https://www.youtube.com/watch?v=...';
         }
+    } else if (selectedType === 'image') {
+        imageField.classList.remove('d-none');
+        if (imageInput) imageInput.required = true;
     }
 }
 

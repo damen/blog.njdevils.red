@@ -153,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $content = trim($_POST['content'] ?? '');
                 $url = trim($_POST['url'] ?? '');
 
-                $validTypes = ['html', 'nhl_goal', 'youtube'];
+                $validTypes = ['html', 'nhl_goal', 'youtube', 'image'];
                 if (!in_array($type, $validTypes, true)) {
                     $error = 'Invalid update type.';
                     break;
@@ -176,6 +176,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if ($url === '') { $error = 'YouTube URL is required.'; break; }
                         $sanitizedUrl = Sanitizer::sanitizeUrl($url, 'youtube');
                         if ($sanitizedUrl === null) { $error = 'Invalid YouTube URL. Must be HTTPS and from an allowed YouTube domain.'; }
+                        break;
+                    case 'image':
+                        if (!isset($_FILES['image_file'])) { $error = 'Image file is required.'; break; }
+                        try {
+                            $publicRoot = dirname(__DIR__) . '/public';
+                            $imageUrl = Helpers::saveUploadedImage($_FILES['image_file'], $publicRoot, '/uploads');
+                        } catch (Throwable $t) {
+                            $error = 'Image upload failed: ' . $t->getMessage();
+                            break;
+                        }
+                        $caption = trim($_POST['image_caption'] ?? '');
+                        if (strlen($caption) > 300) { $caption = substr($caption, 0, 300); }
+                        $sanitizedContent = $caption; // caption
+                        $sanitizedUrl = $imageUrl;     // image URL
                         break;
                 }
 
@@ -399,7 +413,7 @@ if ($game) {
 <div class="card">
     <div class="card-header">Manage Updates for "<?= Helpers::escapeHtml($game['title']) ?>"</div>
     <div class="card-body">
-        <form method="POST" id="inlineUpdateForm" style="margin-bottom: 20px;">
+        <form method="POST" id="inlineUpdateForm" enctype="multipart/form-data" style="margin-bottom: 20px;">
             <?= Auth::csrfField() ?>
             <input type="hidden" name="action" value="add_update">
 
@@ -418,6 +432,10 @@ if ($game) {
                         <input type="radio" id="inline_type_youtube" name="type" value="youtube" <?= ($_POST['type'] ?? '') === 'youtube' ? 'checked' : '' ?> onchange="inlineToggleUpdateFields()">
                         <label for="inline_type_youtube">YouTube Video</label>
                     </div>
+                    <div class="radio-option">
+                        <input type="radio" id="inline_type_image" name="type" value="image" <?= ($_POST['type'] ?? '') === 'image' ? 'checked' : '' ?> onchange="inlineToggleUpdateFields()">
+                        <label for="inline_type_image">Image</label>
+                    </div>
                 </div>
             </div>
 
@@ -431,6 +449,14 @@ if ($game) {
                 <label for="inline_url" id="inline_url_label">URL *</label>
                 <input type="url" id="inline_url" name="url" value="<?= Helpers::escapeHtml($_POST['url'] ?? '') ?>" maxlength="1000" placeholder="https://">
                 <small id="inline_url_help" class="form-text"></small>
+            </div>
+
+            <div class="form-group d-none" id="inline_image_field">
+                <label for="inline_image_file">Image file *</label>
+                <input type="file" id="inline_image_file" name="image_file" accept="image/*">
+                <small class="form-text">Allowed types: JPG, PNG, GIF, WEBP</small>
+                <label for="inline_image_caption" style="margin-top:10px;">Caption (optional)</label>
+                <input type="text" id="inline_image_caption" name="image_caption" maxlength="300" placeholder="Enter caption (optional)">
             </div>
 
             <div class="btn-group">
@@ -474,6 +500,13 @@ if ($game) {
 <iframe src="<?= Helpers::escapeHtml($update['url']) ?>" height="400" style="width: 100%; max-width: 600px; border: 0;" allow="clipboard-write *; fullscreen *"></iframe>
                                             <p><small><em>Goal visualizer will display full-size (825px height) on the live page</em></small></p>
                                         </div>
+                                    <?php elseif ($update['type'] === 'image'): ?>
+                                        <div style="margin-top: 10px;">
+                                            <img src="<?= Helpers::escapeHtml($update['url']) ?>" alt="" style="max-width:100%; height:auto; border:1px solid #eee; border-radius:4px;">
+                                            <?php if (!empty($update['content'])): ?>
+                                                <div style="margin-top:6px;"><em><?= Helpers::escapeHtml($update['content']) ?></em></div>
+                                            <?php endif; ?>
+                                        </div>
                                     <?php endif; ?>
                                 <?php endif; ?>
                             </div>
@@ -492,14 +525,21 @@ function inlineToggleUpdateFields() {
     const urlLabel = document.getElementById('inline_url_label');
     const urlHelp = document.getElementById('inline_url_help');
     const urlInput = document.getElementById('inline_url');
+    const imageField = document.getElementById('inline_image_field');
+    const imageInput = document.getElementById('inline_image_file');
 
     const selected = document.querySelector('input[name="type"]:checked').value;
+
+    // reset
+    contentField.classList.add('d-none');
+    urlField.classList.add('d-none');
+    imageField.classList.add('d-none');
+    urlInput.required = false;
+    if (imageInput) imageInput.required = false;
+
     if (selected === 'html') {
         contentField.classList.remove('d-none');
-        urlField.classList.add('d-none');
-        urlInput.required = false;
-    } else {
-        contentField.classList.add('d-none');
+    } else if (selected === 'nhl_goal' || selected === 'youtube') {
         urlField.classList.remove('d-none');
         urlInput.required = true;
         if (selected === 'nhl_goal') {
@@ -511,6 +551,9 @@ function inlineToggleUpdateFields() {
             urlHelp.textContent = 'YouTube video URL (youtube.com, youtu.be)';
             urlInput.placeholder = 'https://www.youtube.com/watch?v=...';
         }
+    } else if (selected === 'image') {
+        imageField.classList.remove('d-none');
+        if (imageInput) imageInput.required = true;
     }
 }
 function inlineUpdateCharCount(id, max) {

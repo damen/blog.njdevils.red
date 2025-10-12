@@ -5,7 +5,7 @@ A live NHL game update system that provides real-time game information and updat
 ## Features
 
 - **Live Game Management**: Create and manage NHL games with live status control
-- **Real-time Updates**: Support for HTML content, NHL goal visualizer URLs, and YouTube embeds
+- **Real-time Updates**: Support for HTML content, NHL goal visualizer URLs, YouTube embeds, and Image uploads with optional captions
 - **Secure Admin Interface**: Modern admin panel with NJ Devils branding and CSRF protection
 - **JSON API**: Atomic JSON feed generation for client consumption
 - **Auto-refresh Client**: Example HTML client with 60-second refresh cycle
@@ -79,13 +79,13 @@ A live NHL game update system that provides real-time game information and updat
    mysql -h $DB_HOST -P $DB_PORT -u $DB_USER -p$DB_PASS $DB_NAME < migrations/001_init.sql
    ```
 
-4. **File Permissions**
-   ```bash
-   # Ensure JSON output directory is writable
-   mkdir -p public
-   chmod 755 public
-   chown www-data:www-data public  # or appropriate PHP-FPM user
-   ```
+### File Permissions
+```bash
+# Ensure public and uploads directories are writable
+mkdir -p public/uploads
+chmod 755 public public/uploads
+chown www-data:www-data public public/uploads  # or appropriate PHP-FPM user
+```
 
 5. **Cron Setup**
    Add to server crontab:
@@ -182,6 +182,14 @@ A live NHL game update system that provides real-time game information and updat
       "embed_url": "https://www.youtube-nocookie.com/embed/example123",
       "created_at": "2025-10-12T00:43:45Z",
       "relative_time": "1 minute ago"
+    },
+    {
+      "id": 14,
+      "type": "image",
+      "url": "/uploads/2025/10/abc123def4567890.jpg",
+      "caption": "Celebration at the bench",
+      "created_at": "2025-10-12T00:44:15Z",
+      "relative_time": "just now"
     }
   ]
 }
@@ -296,7 +304,7 @@ See `public/example.html` for a complete implementation.
 ### Adding New Update Types
 
 1. Update database enum in migration
-2. Add validation in `Sanitizer.php`
+2. Add validation in `Sanitizer.php` (not required for image uploads; use backend file validation)
 3. Update admin form in `updates.php`
 4. Add rendering logic in `update.php` and `example.html`
 

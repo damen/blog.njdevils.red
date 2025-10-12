@@ -94,6 +94,12 @@ try {
                         }
                     }
                     break;
+                case 'image':
+                    $processedUpdate['url'] = $update['url'];
+                    if (!empty($update['content'])) {
+                        $processedUpdate['caption'] = $update['content'];
+                    }
+                    break;
             }
             
             $processedUpdates[] = $processedUpdate;
