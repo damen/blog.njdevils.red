@@ -21,7 +21,9 @@ $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_
 $csrfToken = $_POST['csrf_token'] ?? '';
 if (!Auth::csrfValidate($csrfToken)) {
     if ($isAjax) {
+        if (function_exists('header_remove')) { header_remove('Content-Type'); }
         header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate');
         echo json_encode(['ok' => false, 'error' => 'Invalid security token. Please reload and try again.']);
         exit;
     }
@@ -40,7 +42,10 @@ try {
     exec("php " . escapeshellarg($updateScriptPath) . " 2>&1", $output, $returnCode);
 
     if ($isAjax) {
+        // Ensure correct content type overrides any defaults from bootstrap
+        if (function_exists('header_remove')) { header_remove('Content-Type'); }
         header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate');
         echo json_encode([
             'ok' => $returnCode === 0,
             'exitCode' => $returnCode,
@@ -57,7 +62,9 @@ try {
     
 } catch (Exception $e) {
     if ($isAjax) {
+        if (function_exists('header_remove')) { header_remove('Content-Type'); }
         header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate');
         echo json_encode(['ok' => false, 'error' => 'Error updating JSON feed: ' . $e->getMessage()]);
         exit;
     }

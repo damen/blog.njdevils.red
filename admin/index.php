@@ -166,10 +166,21 @@ $totalUpdates = Db::fetchOne('SELECT COUNT(*) as count FROM game_updates')['coun
       const fd = new FormData(form);
       try {
         const res = await fetch(form.action, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd });
-        const data = await res.json();
-        let text = 'exitCode: ' + (data.exitCode ?? 'n/a');
-        if (data.stdout) text += '\n\n' + data.stdout;
-        if (data.error && !data.ok) text += '\n\nError: ' + data.error;
+        const ct = res.headers.get('content-type') || '';
+        if (!res.ok) {
+          const t = await res.text();
+          throw new Error('HTTP ' + res.status + ' ' + res.statusText + (t ? ('\n' + t) : ''));
+        }
+        let text;
+        if (ct.includes('application/json')) {
+          const data = await res.json();
+          text = 'exitCode: ' + (data.exitCode ?? 'n/a');
+          if (data.stdout) text += '\n\n' + data.stdout;
+          if (data.error && !data.ok) text += '\n\nError: ' + data.error;
+        } else {
+          const t = await res.text();
+          text = 'Non-JSON response:\n' + t;
+        }
         out.textContent = text;
       } catch (err) {
         out.textContent = 'Request failed: ' + err;
