@@ -286,4 +286,80 @@ renderAdminHeader($game ? 'Edit Game' : 'Create Game', 'game');
 <?php endif; ?>
 <?php endif; ?>
 
+<?php
+// Fetch all games for listing
+try {
+    $allGames = Db::fetchAll('SELECT * FROM games ORDER BY created_at DESC');
+} catch (Exception $e) {
+    $allGames = [];
+}
+?>
+
+<div class="card">
+    <div class="card-header">All Games</div>
+    <div class="card-body">
+        <?php if (empty($allGames)): ?>
+            <p>No games found. Create a new game above.</p>
+        <?php else: ?>
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left; padding:8px; border-bottom: 1px solid #ddd;">Title</th>
+                            <th style="text-align:left; padding:8px; border-bottom: 1px solid #ddd;">Teams</th>
+                            <th style="text-align:left; padding:8px; border-bottom: 1px solid #ddd;">Score</th>
+                            <th style="text-align:left; padding:8px; border-bottom: 1px solid #ddd;">Status</th>
+                            <th style="text-align:left; padding:8px; border-bottom: 1px solid #ddd;">Updated</th>
+                            <th style="text-align:left; padding:8px; border-bottom: 1px solid #ddd;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($allGames as $g): ?>
+                            <tr>
+                                <td style="padding:8px; border-bottom: 1px solid #f0f0f0;">
+                                    <a href="/admin/game.php?id=<?= (int)$g['id'] ?>">
+                                        <?= Helpers::escapeHtml($g['title']) ?>
+                                    </a>
+                                </td>
+                                <td style="padding:8px; border-bottom: 1px solid #f0f0f0;">
+                                    <?= Helpers::escapeHtml($g['away_team']) ?> @ <?= Helpers::escapeHtml($g['home_team']) ?>
+                                </td>
+                                <td style="padding:8px; border-bottom: 1px solid #f0f0f0;">
+                                    <?= (int)$g['score_away'] ?> - <?= (int)$g['score_home'] ?>
+                                </td>
+                                <td style="padding:8px; border-bottom: 1px solid #f0f0f0;">
+                                    <?php if ((int)$g['is_live'] === 1): ?>
+                                        <span class="status-live">LIVE</span>
+                                    <?php else: ?>
+                                        <span class="status-inactive">—</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td style="padding:8px; border-bottom: 1px solid #f0f0f0;">
+                                    <?= Helpers::relativeTime(new DateTime($g['updated_at'])) ?>
+                                </td>
+                                <td style="padding:8px; border-bottom: 1px solid #f0f0f0; white-space:nowrap;">
+                                    <a class="btn btn-secondary btn-small" href="/admin/game.php?id=<?= (int)$g['id'] ?>">Edit</a>
+                                    <?php if ((int)$g['is_live'] === 1): ?>
+                                        <form method="POST" action="/admin/game.php?id=<?= (int)$g['id'] ?>" style="display:inline; margin-left:6px;">
+                                            <?= Auth::csrfField() ?>
+                                            <input type="hidden" name="action" value="unset_live">
+                                            <button type="submit" class="btn btn-danger btn-small" onclick="return confirm('Stop live feed for this game?')">Unset Live</button>
+                                        </form>
+                                    <?php else: ?>
+                                        <form method="POST" action="/admin/game.php?id=<?= (int)$g['id'] ?>" style="display:inline; margin-left:6px;">
+                                            <?= Auth::csrfField() ?>
+                                            <input type="hidden" name="action" value="set_live">
+                                            <button type="submit" class="btn btn-success btn-small" onclick="return confirm('Set this game as live? This will stop any other live game.')">Set Live</button>
+                                        </form>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
 <?php renderAdminFooter(); ?>

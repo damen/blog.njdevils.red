@@ -38,9 +38,14 @@ function renderAdminHeader(string $pageTitle, string $currentPage = ''): void
     </head>
     <body>
         <div class="header">
-            <div class="container">
-                <h1>NJ Devils Game Day Admin</h1>
-                <div class="subtitle"><?= Helpers::escapeHtml($pageTitle) ?></div>
+            <div class="container header-inner">
+                <div class="brand">
+                    <img class="brand-logo" src="/assets/img/NJD_dark.svg?v=<?= $cacheVersion ?>" alt="New Jersey Devils" width="40" height="40">
+                    <div class="brand-text">
+                        <h1>NJ Devils Game Day Admin</h1>
+                        <div class="subtitle"><?= Helpers::escapeHtml($pageTitle) ?></div>
+                    </div>
+                </div>
             </div>
         </div>
         
