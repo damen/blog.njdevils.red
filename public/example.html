@@ -383,11 +383,11 @@
                             <div style="display:flex; gap:20px; flex-wrap:wrap;">
                                 <div style="flex:1; min-width:240px;">
                                     <h3>${escapeHtml(game.home_team)} Lineup</h3>
-                                    ${homeLineup ? `<ul>${homeLineup.split('\n').map(l => `<li>${escapeHtml(l)}</li>`).join('')}</ul>` : '<em>No lineup provided</em>'}
+                                    ${homeLineup ? `<pre style="white-space:pre-wrap; margin:0;">${escapeHtml(homeLineup)}</pre>` : '<em>No lineup provided</em>'}
                                 </div>
                                 <div style="flex:1; min-width:240px;">
                                     <h3>${escapeHtml(game.away_team)} Lineup</h3>
-                                    ${awayLineup ? `<ul>${awayLineup.split('\n').map(l => `<li>${escapeHtml(l)}</li>`).join('')}</ul>` : '<em>No lineup provided</em>'}
+                                    ${awayLineup ? `<pre style="white-space:pre-wrap; margin:0;">${escapeHtml(awayLineup)}</pre>` : '<em>No lineup provided</em>'}
                                 </div>
                             </div>
                         </div>

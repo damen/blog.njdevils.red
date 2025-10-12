@@ -163,6 +163,8 @@ A live NHL game update system that provides real-time game information and updat
     "home_team": "Devils",
     "away_team": "Rangers", 
     "score": {"home": 2, "away": 1},
+    "home_lineup": "Palat - Hughes - Bratt\nMeier - Hischier - Mercer\nGritsyuk - Glass - Brown\nCotter - Glendening - MacEwan\n\nHughes - Pesce\nSiegenthaler - Hamilton\nDillon - Nemec\n\nMarkstrom\nAllen",
+    "away_lineup": "...",
     "last_updated": "2025-10-12T00:44:30Z"
   },
   "updates": [
