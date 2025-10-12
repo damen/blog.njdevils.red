@@ -162,11 +162,10 @@ class Auth
         
         $valid = hash_equals($_SESSION[self::CSRF_KEY], $token);
         
-        // Rotate token after validation for additional security
-        if ($valid) {
-            $_SESSION[self::CSRF_KEY] = bin2hex(random_bytes(32));
-        }
-        
+        // Keep a stable per-session token to avoid stale tokens across multiple forms
+        // on the same page. Rotation can cause subsequent form submissions to fail
+        // without a full page reload. If desired, rotation could be re-enabled with
+        // AJAX-based token refresh per form submit.
         return $valid;
     }
     

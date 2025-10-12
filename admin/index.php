@@ -136,7 +136,7 @@ $totalUpdates = Db::fetchOne('SELECT COUNT(*) as count FROM game_updates')['coun
             <a href="/admin/updates.php" class="btn btn-secondary">
                 Manage Updates
             </a>
-            <a href="/json_test.php" class="btn btn-secondary" target="_blank">
+            <a href="/current.json" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
                 View JSON Feed
             </a>
         </div>

@@ -144,7 +144,7 @@ renderAdminHeader('Manage Updates', 'updates');
                     🔄 Update JSON Feed
                 </button>
             </form>
-            <a href="/json_test.php" class="btn btn-secondary btn-small" target="_blank" rel="noopener noreferrer">
+            <a href="/current.json" class="btn btn-secondary btn-small" target="_blank" rel="noopener noreferrer">
                 View JSON
             </a>
         </div>

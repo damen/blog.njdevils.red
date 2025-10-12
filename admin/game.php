@@ -269,8 +269,8 @@ renderAdminHeader($game ? 'Edit Game' : 'Create Game', 'game');
     <div class="card-body">
         <div class="btn-group">
             <a href="/admin/updates.php" class="btn btn-primary">Manage Updates</a>
-            <a href="/json_test.php" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">View JSON Feed</a>
-            <a href="/public/example.html" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">Test Client</a>
+            <a href="/current.json" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">View JSON Feed</a>
+            <a href="/example.html" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">Test Client</a>
         </div>
         
         <div class="btn-group" style="margin-top: 15px;">
