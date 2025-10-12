@@ -49,8 +49,9 @@ class Sanitizer
         
         // Extract content from wrapper div
         $result = '';
-        if ($dom->documentElement && $dom->documentElement->firstChild) {
-            foreach ($dom->documentElement->firstChild->childNodes as $node) {
+        $wrapper = $dom->documentElement; // The <div> we wrapped around input
+        if ($wrapper) {
+            foreach ($wrapper->childNodes as $node) {
                 $result .= $dom->saveHTML($node);
             }
         }
