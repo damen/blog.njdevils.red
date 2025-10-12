@@ -48,6 +48,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $scoreHome = (int)($_POST['score_home'] ?? 0);
                 $scoreAway = (int)($_POST['score_away'] ?? 0);
                 
+                // Lineups (plain text, normalize line endings to LF)
+                $homeLineupText = $_POST['home_lineup_text'] ?? '';
+                $awayLineupText = $_POST['away_lineup_text'] ?? '';
+                $homeLineupText = str_replace(["\r\n", "\r"], "\n", $homeLineupText);
+                $awayLineupText = str_replace(["\r\n", "\r"], "\n", $awayLineupText);
+                $homeLineupText = rtrim($homeLineupText);
+                $awayLineupText = rtrim($awayLineupText);
+                
                 // Validate required fields
                 $errors = [];
                 if (empty($title)) $errors[] = 'Game title is required.';
@@ -66,15 +74,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if ($game) {
                             // Update existing game
                             Db::execute(
-                                'UPDATE games SET title = ?, home_team = ?, away_team = ?, score_home = ?, score_away = ?, updated_at = NOW() WHERE id = ?',
-                                [$title, $homeTeam, $awayTeam, $scoreHome, $scoreAway, $game['id']]
+                                'UPDATE games SET title = ?, home_team = ?, away_team = ?, score_home = ?, score_away = ?, home_lineup_text = ?, away_lineup_text = ?, updated_at = NOW() WHERE id = ?',
+                                [$title, $homeTeam, $awayTeam, $scoreHome, $scoreAway, $homeLineupText, $awayLineupText, $game['id']]
                             );
                             $success = 'Game updated successfully.';
                         } else {
                             // Create new game
                             $stmt = Db::execute(
-                                'INSERT INTO games (title, home_team, away_team, score_home, score_away) VALUES (?, ?, ?, ?, ?)',
-                                [$title, $homeTeam, $awayTeam, $scoreHome, $scoreAway]
+                                'INSERT INTO games (title, home_team, away_team, score_home, score_away, home_lineup_text, away_lineup_text) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                                [$title, $homeTeam, $awayTeam, $scoreHome, $scoreAway, $homeLineupText, $awayLineupText]
                             );
                             $gameId = Db::pdo()->lastInsertId();
                             $success = 'Game created successfully.';
@@ -294,6 +302,18 @@ renderAdminHeader($game ? 'Edit Game' : 'Create Game', 'game');
                         max="99"
                     >
                 </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="home_lineup_text">Home lineup (multi-line text)</label>
+                <textarea id="home_lineup_text" name="home_lineup_text" rows="8" placeholder="Enter plain text. One line per player or any format."><?= Helpers::escapeHtml($game['home_lineup_text'] ?? '') ?></textarea>
+                <small class="form-text">Enter plain text. Use one line per player or any format you prefer. No parsing is performed.</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="away_lineup_text">Away lineup (multi-line text)</label>
+                <textarea id="away_lineup_text" name="away_lineup_text" rows="8" placeholder="Enter plain text. One line per player or any format."><?= Helpers::escapeHtml($game['away_lineup_text'] ?? '') ?></textarea>
+                <small class="form-text">Enter plain text. Use one line per player or any format you prefer. No parsing is performed.</small>
             </div>
             
             <div class="btn-group">

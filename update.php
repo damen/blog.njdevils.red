@@ -113,6 +113,8 @@ try {
                     'home' => (int)$liveGame['score_home'],
                     'away' => (int)$liveGame['score_away']
                 ],
+                'home_lineup' => (string)($liveGame['home_lineup_text'] ?? ''),
+                'away_lineup' => (string)($liveGame['away_lineup_text'] ?? ''),
                 'last_updated' => $lastUpdated->format('c')
             ],
             'updates' => $processedUpdates

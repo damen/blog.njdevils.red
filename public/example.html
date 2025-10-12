@@ -372,6 +372,29 @@
                 </div>
             `;
             
+            // Lineups section (show if either lineup is provided)
+            const homeLineup = (game.home_lineup || '').trim();
+            const awayLineup = (game.away_lineup || '').trim();
+            if (homeLineup || awayLineup) {
+                html += `
+                    <div class="game-card">
+                        <div class="game-card-header">Lineups</div>
+                        <div class="game-card-body">
+                            <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                                <div style="flex:1; min-width:240px;">
+                                    <h3>${escapeHtml(game.home_team)} Lineup</h3>
+                                    ${homeLineup ? `<ul>${homeLineup.split('\n').map(l => `<li>${escapeHtml(l)}</li>`).join('')}</ul>` : '<em>No lineup provided</em>'}
+                                </div>
+                                <div style="flex:1; min-width:240px;">
+                                    <h3>${escapeHtml(game.away_team)} Lineup</h3>
+                                    ${awayLineup ? `<ul>${awayLineup.split('\n').map(l => `<li>${escapeHtml(l)}</li>`).join('')}</ul>` : '<em>No lineup provided</em>'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
             if (updates.length > 0) {
                 html += `
                     <div class="game-card">
