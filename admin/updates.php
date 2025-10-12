@@ -138,12 +138,13 @@ renderAdminHeader('Manage Updates', 'updates');
         <p><small>Last updated: <?= Helpers::relativeTime(new DateTime($liveGame['updated_at'])) ?></small></p>
         
         <div class="mt-20">
-            <form method="POST" action="/admin/update_json.php" style="display: inline; margin-right: 10px;">
+            <form id="update-json-form" method="POST" action="/admin/update_json.php" style="display: inline; margin-right: 10px;">
                 <?= Auth::csrfField() ?>
                 <button type="submit" class="btn btn-success btn-small">
                     🔄 Update JSON Feed
                 </button>
             </form>
+            <pre id="update-json-output" style="white-space:pre-wrap;background:#111;color:#eee;padding:8px;border-radius:4px;min-height:3em;margin-top:10px;display:none;"></pre>
             <a href="/current.json" class="btn btn-secondary btn-small" target="_blank" rel="noopener noreferrer">
                 View JSON
             </a>
@@ -345,6 +346,26 @@ function clearForm() {
 document.addEventListener('DOMContentLoaded', function() {
     toggleUpdateFields();
     updateCharCount('content', 1000);
+    const form = document.getElementById('update-json-form');
+    if (form) {
+        const out = document.getElementById('update-json-output');
+        form.addEventListener('submit', async function(e){
+            e.preventDefault();
+            out.style.display = 'block';
+            out.textContent = 'Running update.php...';
+            const fd = new FormData(form);
+            try {
+                const res = await fetch(form.action, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd });
+                const data = await res.json();
+                let text = 'exitCode: ' + (data.exitCode ?? 'n/a');
+                if (data.stdout) text += '\n\n' + data.stdout;
+                if (data.error && !data.ok) text += '\n\nError: ' + data.error;
+                out.textContent = text;
+            } catch (err) {
+                out.textContent = 'Request failed: ' + err;
+            }
+        });
+    }
 });
 </script>
 

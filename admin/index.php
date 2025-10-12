@@ -142,14 +142,40 @@ $totalUpdates = Db::fetchOne('SELECT COUNT(*) as count FROM game_updates')['coun
         </div>
         
         <div class="btn-group" style="margin-top: 15px;">
-            <form method="POST" action="/admin/update_json.php" style="display: inline;">
+            <form id="update-json-form" method="POST" action="/admin/update_json.php" style="display: inline;">
                 <?= Auth::csrfField() ?>
-                <button type="submit" class="btn btn-success" onclick="return confirm('Manually update the JSON feed now?')">
+                <button type="submit" class="btn btn-success">
                     🔄 Update JSON Feed
                 </button>
             </form>
+            <pre id="update-json-output" style="white-space:pre-wrap;background:#111;color:#eee;padding:8px;border-radius:4px;min-height:3em;margin-top:10px;display:none;"></pre>
         </div>
     </div>
 </div>
 
+<script>
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    const form = document.getElementById('update-json-form');
+    if (!form) return;
+    const out = document.getElementById('update-json-output');
+    form.addEventListener('submit', async function(e){
+      e.preventDefault();
+      out.style.display = 'block';
+      out.textContent = 'Running update.php...';
+      const fd = new FormData(form);
+      try {
+        const res = await fetch(form.action, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: fd });
+        const data = await res.json();
+        let text = 'exitCode: ' + (data.exitCode ?? 'n/a');
+        if (data.stdout) text += '\n\n' + data.stdout;
+        if (data.error && !data.ok) text += '\n\nError: ' + data.error;
+        out.textContent = text;
+      } catch (err) {
+        out.textContent = 'Request failed: ' + err;
+      }
+    });
+  });
+})();
+</script>
 <?php renderAdminFooter(); ?>
