@@ -197,7 +197,7 @@ renderAdminHeader('Manage Updates', 'updates');
                     id="content" 
                     name="content" 
                     maxlength="1000"
-                    placeholder="Enter HTML content. Allowed tags: a, p, br, strong, em, ul, ol, li, blockquote"
+                    placeholder="Enter HTML content. Allowed tags: a, p, br, strong, em, ul, ol, li, blockquote, h1, h2, h3, h4, h5, h6"
                     oninput="updateCharCount('content', 1000)"
                 ><?= Helpers::escapeHtml($_POST['content'] ?? '') ?></textarea>
                 <div class="char-count" id="content_count">0 / 1000 characters</div>

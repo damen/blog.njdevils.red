@@ -245,7 +245,7 @@ See `public/example.html` for a complete implementation.
 ## Content Sanitization
 
 ### HTML Content
-- **Allowed tags**: `a`, `p`, `br`, `strong`, `em`, `ul`, `ol`, `li`, `blockquote`
+- **Allowed tags**: `a`, `p`, `br`, `strong`, `em`, `ul`, `ol`, `li`, `blockquote`, `h1`, `h2`, `h3`, `h4`, `h5`, `h6`
 - **Allowed attributes**: `href`, `rel`, `target` (on `a` tags only)
 - **Security**: JavaScript removal, HTTPS-only links, 1000 character limit
 

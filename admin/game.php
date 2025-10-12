@@ -423,7 +423,7 @@ if ($game) {
 
             <div class="form-group" id="inline_content_field">
                 <label for="inline_content">HTML Content *</label>
-                <textarea id="inline_content" name="content" maxlength="1000" placeholder="Enter HTML or plain text. Allowed tags: a, p, br, strong, em, ul, ol, li, blockquote" oninput="inlineUpdateCharCount('inline_content', 1000)"><?= Helpers::escapeHtml($_POST['content'] ?? '') ?></textarea>
+                <textarea id="inline_content" name="content" maxlength="1000" placeholder="Enter HTML or plain text. Allowed tags: a, p, br, strong, em, ul, ol, li, blockquote, h1, h2, h3, h4, h5, h6" oninput="inlineUpdateCharCount('inline_content', 1000)"><?= Helpers::escapeHtml($_POST['content'] ?? '') ?></textarea>
                 <div class="char-count" id="inline_content_count">0 / 1000 characters</div>
             </div>
 

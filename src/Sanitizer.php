@@ -9,7 +9,8 @@
 class Sanitizer
 {
     private static array $allowedTags = [
-        'a', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'blockquote'
+        'a', 'p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'blockquote',
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6'
     ];
     
     private static array $allowedAttributes = [
