@@ -135,6 +135,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 break;
+
+            case 'add_update':
+                if (!$game) {
+                    $error = 'Create or select a game first before adding updates.';
+                    break;
+                }
+                $type = $_POST['type'] ?? '';
+                $content = trim($_POST['content'] ?? '');
+                $url = trim($_POST['url'] ?? '');
+
+                $validTypes = ['html', 'nhl_goal', 'youtube'];
+                if (!in_array($type, $validTypes, true)) {
+                    $error = 'Invalid update type.';
+                    break;
+                }
+
+                $sanitizedContent = null;
+                $sanitizedUrl = null;
+                switch ($type) {
+                    case 'html':
+                        if ($content === '') { $error = 'HTML content is required.'; break; }
+                        $sanitizedContent = Sanitizer::sanitizeHtml($content);
+                        if ($sanitizedContent === null) { $error = 'HTML content is invalid or too long (max 1000 characters).'; }
+                        break;
+                    case 'nhl_goal':
+                        if ($url === '') { $error = 'NHL goal URL is required.'; break; }
+                        $sanitizedUrl = Sanitizer::sanitizeUrl($url, 'nhl_goal');
+                        if ($sanitizedUrl === null) { $error = 'Invalid NHL URL. Must be HTTPS and from nhl.com domain.'; }
+                        break;
+                    case 'youtube':
+                        if ($url === '') { $error = 'YouTube URL is required.'; break; }
+                        $sanitizedUrl = Sanitizer::sanitizeUrl($url, 'youtube');
+                        if ($sanitizedUrl === null) { $error = 'Invalid YouTube URL. Must be HTTPS and from an allowed YouTube domain.'; }
+                        break;
+                }
+
+                if (empty($error)) {
+                    try {
+                        Db::execute(
+                            'INSERT INTO game_updates (game_id, type, content, url) VALUES (?, ?, ?, ?)',
+                            [$game['id'], $type, $sanitizedContent, $sanitizedUrl]
+                        );
+                        $success = 'Update added successfully.';
+                        // Clear POST fields so the form resets
+                        $_POST = [];
+                    } catch (Exception $e) {
+                        $error = 'Database error: ' . $e->getMessage();
+                    }
+                }
+                break;
+
+            case 'delete_update':
+                if (!$game) {
+                    $error = 'No game selected.';
+                    break;
+                }
+                $updateId = $_POST['update_id'] ?? '';
+                if (!is_numeric($updateId) || (int)$updateId <= 0) {
+                    $error = 'Invalid update ID.';
+                    break;
+                }
+                try {
+                    $update = Db::fetchOne('SELECT * FROM game_updates WHERE id = ? AND game_id = ?', [(int)$updateId, $game['id']]);
+                    if (!$update) {
+                        $error = 'Update not found for this game.';
+                        break;
+                    }
+                    Db::execute('DELETE FROM game_updates WHERE id = ?', [(int)$updateId]);
+                    $success = 'Update deleted successfully.';
+                } catch (Exception $e) {
+                    $error = 'Database error: ' . $e->getMessage();
+                }
+                break;
         }
     }
 }
@@ -284,6 +357,154 @@ renderAdminHeader($game ? 'Edit Game' : 'Create Game', 'game');
     </div>
 </div>
 <?php endif; ?>
+<?php endif; ?>
+
+<?php
+// Load updates for this game (newest first)
+$updates = [];
+if ($game) {
+    try {
+        $updates = Db::fetchAll(
+            'SELECT * FROM game_updates WHERE game_id = ? ORDER BY created_at DESC',
+            [$game['id']]
+        );
+    } catch (Exception $e) {
+        $updates = [];
+    }
+}
+?>
+
+<?php if ($game): ?>
+<div class="card">
+    <div class="card-header">Manage Updates for "<?= Helpers::escapeHtml($game['title']) ?>"</div>
+    <div class="card-body">
+        <form method="POST" id="inlineUpdateForm" style="margin-bottom: 20px;">
+            <?= Auth::csrfField() ?>
+            <input type="hidden" name="action" value="add_update">
+
+            <div class="form-group">
+                <label>Update Type *</label>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" id="inline_type_html" name="type" value="html" <?= ($_POST['type'] ?? 'html') === 'html' ? 'checked' : '' ?> onchange="inlineToggleUpdateFields()">
+                        <label for="inline_type_html">HTML Content</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="inline_type_nhl_goal" name="type" value="nhl_goal" <?= ($_POST['type'] ?? '') === 'nhl_goal' ? 'checked' : '' ?> onchange="inlineToggleUpdateFields()">
+                        <label for="inline_type_nhl_goal">NHL Goal Visualizer</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="inline_type_youtube" name="type" value="youtube" <?= ($_POST['type'] ?? '') === 'youtube' ? 'checked' : '' ?> onchange="inlineToggleUpdateFields()">
+                        <label for="inline_type_youtube">YouTube Video</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" id="inline_content_field">
+                <label for="inline_content">HTML Content *</label>
+                <textarea id="inline_content" name="content" maxlength="1000" placeholder="Enter HTML or plain text. Allowed tags: a, p, br, strong, em, ul, ol, li, blockquote" oninput="inlineUpdateCharCount('inline_content', 1000)"><?= Helpers::escapeHtml($_POST['content'] ?? '') ?></textarea>
+                <div class="char-count" id="inline_content_count">0 / 1000 characters</div>
+            </div>
+
+            <div class="form-group d-none" id="inline_url_field">
+                <label for="inline_url" id="inline_url_label">URL *</label>
+                <input type="url" id="inline_url" name="url" value="<?= Helpers::escapeHtml($_POST['url'] ?? '') ?>" maxlength="1000" placeholder="https://">
+                <small id="inline_url_help" class="form-text"></small>
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">Add Update</button>
+            </div>
+        </form>
+
+        <div class="card" style="box-shadow:none; border:1px solid #eee;">
+            <div class="card-header">All Updates (<?= count($updates) ?>)</div>
+            <div class="card-body">
+                <?php if (empty($updates)): ?>
+                    <p>No updates yet. Add your first update above.</p>
+                <?php else: ?>
+                    <?php foreach ($updates as $update): ?>
+                        <div class="update-item">
+                            <div class="update-header">
+                                <span class="update-type update-type-<?= $update['type'] ?>"><?= strtoupper(str_replace('_', ' ', $update['type'])) ?></span>
+                                <span class="update-time"><?= Helpers::relativeTime(new DateTime($update['created_at'])) ?></span>
+                                <form method="POST" style="display:inline;">
+                                    <?= Auth::csrfField() ?>
+                                    <input type="hidden" name="action" value="delete_update">
+                                    <input type="hidden" name="update_id" value="<?= (int)$update['id'] ?>">
+                                    <button type="submit" class="btn btn-danger btn-small" onclick="return confirm('Delete this update?')">Delete</button>
+                                </form>
+                            </div>
+                            <div class="update-content">
+                                <?php if ($update['type'] === 'html'): ?>
+                                    <?= $update['content'] ?>
+                                <?php else: ?>
+                                    <?php if ($update['type'] === 'youtube'): ?>
+                                        <?php $embedUrl = Helpers::youtubeEmbedUrl($update['url']); ?>
+                                        <?php if ($embedUrl): ?>
+                                            <div style="margin-top: 10px;">
+                                                <iframe width="300" height="200" src="<?= Helpers::escapeHtml($embedUrl) }" frameborder="0" allowfullscreen style="max-width: 100%;"></iframe>
+                                            </div>
+                                        <?php else: ?>
+                                            <em>YouTube video</em>
+                                        <?php endif; ?>
+                                    <?php elseif ($update['type'] === 'nhl_goal'): ?>
+                                        <div style="margin-top: 10px;">
+                                            <iframe src="<?= Helpers::escapeHtml($update['url']) }" height="400" style="width: 100%; max-width: 600px; border: 0;" allow="clipboard-write *; fullscreen *"></iframe>
+                                            <p><small><em>Goal visualizer will display full-size (825px height) on the live page</em></small></p>
+                                        </div>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function inlineToggleUpdateFields() {
+    const contentField = document.getElementById('inline_content_field');
+    const urlField = document.getElementById('inline_url_field');
+    const urlLabel = document.getElementById('inline_url_label');
+    const urlHelp = document.getElementById('inline_url_help');
+    const urlInput = document.getElementById('inline_url');
+
+    const selected = document.querySelector('input[name="type"]:checked').value;
+    if (selected === 'html') {
+        contentField.classList.remove('d-none');
+        urlField.classList.add('d-none');
+        urlInput.required = false;
+    } else {
+        contentField.classList.add('d-none');
+        urlField.classList.remove('d-none');
+        urlInput.required = true;
+        if (selected === 'nhl_goal') {
+            urlLabel.textContent = 'NHL Goal Visualizer URL *';
+            urlHelp.textContent = 'Must be an HTTPS URL from nhl.com';
+            urlInput.placeholder = 'https://www.nhl.com/ppt-replay/goal/...';
+        } else if (selected === 'youtube') {
+            urlLabel.textContent = 'YouTube URL *';
+            urlHelp.textContent = 'YouTube video URL (youtube.com, youtu.be)';
+            urlInput.placeholder = 'https://www.youtube.com/watch?v=...';
+        }
+    }
+}
+function inlineUpdateCharCount(id, max) {
+    const el = document.getElementById(id);
+    const counter = document.getElementById(id + '_count');
+    const len = el.value.length;
+    counter.textContent = `${len} / ${max} characters`;
+    counter.classList.toggle('over-limit', len > max);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    inlineToggleUpdateFields();
+    inlineUpdateCharCount('inline_content', 1000);
+});
+</script>
 <?php endif; ?>
 
 <?php

@@ -251,39 +251,37 @@ renderAdminHeader('Manage Updates', 'updates');
                         </form>
                     </div>
                     <div class="update-content">
-                        <?php if ($update['type'] === 'html'): ?>
-                            <?= $update['content'] ?>
-                        <?php else: ?>
-                            <a href="<?= Helpers::escapeHtml($update['url']) ?>" target="_blank" rel="noopener noreferrer">
-                                <?= Helpers::escapeHtml($update['url']) ?>
-                            </a>
-                            
-                            <?php if ($update['type'] === 'youtube'): ?>
-                                <?php $embedUrl = Helpers::youtubeEmbedUrl($update['url']); ?>
-                                <?php if ($embedUrl): ?>
-                                    <div style="margin-top: 10px;">
-                                        <iframe 
-                                            width="300" 
-                                            height="200" 
-                                            src="<?= Helpers::escapeHtml($embedUrl) ?>" 
-                                            frameborder="0" 
-                                            allowfullscreen
-                                            style="max-width: 100%;"
-                                        ></iframe>
-                                    </div>
-                                <?php endif; ?>
-                            <?php elseif ($update['type'] === 'nhl_goal' && strpos($update['url'], 'nhl.com') !== false): ?>
+                    <?php if ($update['type'] === 'html'): ?>
+                        <?= $update['content'] ?>
+                    <?php else: ?>
+                        <?php if ($update['type'] === 'youtube'): ?>
+                            <?php $embedUrl = Helpers::youtubeEmbedUrl($update['url']); ?>
+                            <?php if ($embedUrl): ?>
                                 <div style="margin-top: 10px;">
                                     <iframe 
-                                        src="<?= Helpers::escapeHtml($update['url']) ?>" 
-                                        height="400" 
-                                        style="width: 100%; max-width: 600px; border: 0;" 
-                                        allow="clipboard-write *; fullscreen *"
+                                        width="300" 
+                                        height="200" 
+                                        src="<?= Helpers::escapeHtml($embedUrl) }" 
+                                        frameborder="0" 
+                                        allowfullscreen
+                                        style="max-width: 100%;"
                                     ></iframe>
-                                    <p><small><em>Goal visualizer will display full-size (825px height) on the live page</em></small></p>
                                 </div>
+                            <?php else: ?>
+                                <em>YouTube video</em>
                             <?php endif; ?>
+                        <?php elseif ($update['type'] === 'nhl_goal'): ?>
+                            <div style="margin-top: 10px;">
+                                <iframe 
+                                    src="<?= Helpers::escapeHtml($update['url']) }" 
+                                    height="400" 
+                                    style="width: 100%; max-width: 600px; border: 0;" 
+                                    allow="clipboard-write *; fullscreen *"
+                                ></iframe>
+                                <p><small><em>Goal visualizer will display full-size (825px height) on the live page</em></small></p>
+                            </div>
                         <?php endif; ?>
+                    <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>

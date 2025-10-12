@@ -90,10 +90,10 @@ $totalUpdates = Db::fetchOne('SELECT COUNT(*) as count FROM game_updates')['coun
                 <div class="update-content">
                     <?php if ($update['type'] === 'html'): ?>
                         <?= $update['content'] ?>
-                    <?php else: ?>
-                        <a href="<?= Helpers::escapeHtml($update['url']) ?>" target="_blank" rel="noopener noreferrer">
-                            <?= Helpers::escapeHtml($update['url']) ?>
-                        </a>
+                    <?php elseif ($update['type'] === 'youtube'): ?>
+                        <em>YouTube video</em>
+                    <?php elseif ($update['type'] === 'nhl_goal'): ?>
+                        <em>NHL goal visualizer</em>
                     <?php endif; ?>
                 </div>
             </div>
