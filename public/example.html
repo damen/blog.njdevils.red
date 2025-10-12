@@ -356,8 +356,8 @@
             const logoBase = 'https://assets.nhle.com/logos/nhl/svg/';
             const awayAbbrev = (game.away_abbrev || '').trim();
             const homeAbbrev = (game.home_abbrev || '').trim();
-            const awayLogo = awayAbbrev ? `${logoBase}${awayAbbrev}_dark.svg` : null;
-            const homeLogo = homeAbbrev ? `${logoBase}${homeAbbrev}_dark.svg` : null;
+            const awayLogo = awayAbbrev ? `${logoBase}${awayAbbrev}_light.svg` : null;
+            const homeLogo = homeAbbrev ? `${logoBase}${homeAbbrev}_light.svg` : null;
             
             let html = `
                 <div class="game-card">

@@ -80,15 +80,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if ($game) {
                             // Update existing game
                             Db::execute(
-'UPDATE games SET title = ?, home_team = ?, away_team = ?, home_abbrev = ?, away_abbrev = ?, score_home = ?, score_away = ?, home_lineup_text = ?, away_lineup_text = ?, updated_at = NOW() WHERE id = ?'
-[$title, $homeTeam, $awayTeam, $homeAbbrev, $awayAbbrev, $scoreHome, $scoreAway, $homeLineupText, $awayLineupText, $game['id']]
+                                'UPDATE games SET title = ?, home_team = ?, away_team = ?, home_abbrev = ?, away_abbrev = ?, score_home = ?, score_away = ?, home_lineup_text = ?, away_lineup_text = ?, updated_at = NOW() WHERE id = ?',
+                                [$title, $homeTeam, $awayTeam, $homeAbbrev, $awayAbbrev, $scoreHome, $scoreAway, $homeLineupText, $awayLineupText, $game['id']]
                             );
                             $success = 'Game updated successfully.';
                         } else {
                             // Create new game
                             $stmt = Db::execute(
-'INSERT INTO games (title, home_team, away_team, home_abbrev, away_abbrev, score_home, score_away, home_lineup_text, away_lineup_text) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-[$title, $homeTeam, $awayTeam, $homeAbbrev, $awayAbbrev, $scoreHome, $scoreAway, $homeLineupText, $awayLineupText]
+                                'INSERT INTO games (title, home_team, away_team, home_abbrev, away_abbrev, score_home, score_away, home_lineup_text, away_lineup_text) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                                [$title, $homeTeam, $awayTeam, $homeAbbrev, $awayAbbrev, $scoreHome, $scoreAway, $homeLineupText, $awayLineupText]
                             );
                             $gameId = Db::pdo()->lastInsertId();
                             $success = 'Game created successfully.';
