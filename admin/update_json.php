@@ -33,13 +33,71 @@ if (!Auth::csrfValidate($csrfToken)) {
 }
 
 try {
-    // Execute the update script
-    $output = [];
-    $returnCode = 0;
-    
-    // Run the update.php script
+    // Execute the update script with robust fallbacks
     $updateScriptPath = __DIR__ . '/../update.php';
-    exec("php " . escapeshellarg($updateScriptPath) . " 2>&1", $output, $returnCode);
+    $stdout = '';
+    $stderr = '';
+    $exitCode = 0;
+
+    // Helper to check if a function is disabled
+    $isDisabled = static function(string $fn): bool {
+        $disabled = array_map('trim', explode(',', (string)ini_get('disable_functions')));
+        return !function_exists($fn) || in_array($fn, $disabled, true);
+    };
+
+    // Resolve PHP binary
+    $phpCandidates = [];
+    if (defined('PHP_BINARY') && PHP_BINARY) { $phpCandidates[] = PHP_BINARY; }
+    $phpCandidates = array_merge($phpCandidates, [
+        '/usr/bin/php', '/usr/local/bin/php', '/bin/php',
+        '/usr/bin/php8.3', '/usr/bin/php8.2', '/usr/bin/php8.1', '/usr/bin/php8.0'
+    ]);
+    $phpBin = null;
+    foreach ($phpCandidates as $cand) {
+        if (is_file($cand) && is_executable($cand)) { $phpBin = $cand; break; }
+    }
+    if ($phpBin === null) { $phpBin = 'php'; }
+
+    // Prefer proc_open when available
+    if (!$isDisabled('proc_open')) {
+        $descriptors = [
+            1 => ['pipe', 'w'], // stdout
+            2 => ['pipe', 'w'], // stderr
+        ];
+        $cwd = dirname(__DIR__);
+        $cmd = [$phpBin, $updateScriptPath];
+        $proc = proc_open($cmd, $descriptors, $pipes, $cwd);
+        if (is_resource($proc)) {
+            $stdout = stream_get_contents($pipes[1]); fclose($pipes[1]);
+            $stderr = stream_get_contents($pipes[2]); fclose($pipes[2]);
+            $exitCode = proc_close($proc);
+        } else {
+            $exitCode = 1;
+            $stderr = 'Failed to start process with proc_open';
+        }
+    } elseif (!$isDisabled('exec')) {
+        $output = [];
+        $cmd = escapeshellarg($phpBin) . ' ' . escapeshellarg($updateScriptPath) . ' 2>&1';
+        @exec($cmd, $output, $exitCode);
+        $stdout = implode("\n", (array)$output);
+        $stderr = '';
+    } else {
+        // Fallback: include the script and capture output buffer
+        $cwd = getcwd();
+        chdir(dirname(__DIR__));
+        ob_start();
+        try {
+            include $updateScriptPath; // Will echo JSON when not CLI; acceptable for capturing
+            $stdout = ob_get_clean();
+            $exitCode = 0;
+        } catch (Throwable $t) {
+            $stdout = ob_get_clean();
+            $stderr = $t->getMessage();
+            $exitCode = 1;
+        } finally {
+            if ($cwd) { chdir($cwd); }
+        }
+    }
 
     if ($isAjax) {
         // Ensure correct content type overrides any defaults from bootstrap
@@ -47,17 +105,18 @@ try {
         header('Content-Type: application/json');
         header('Cache-Control: no-store, no-cache, must-revalidate');
         echo json_encode([
-            'ok' => $returnCode === 0,
-            'exitCode' => $returnCode,
-            'stdout' => implode("\n", $output)
+            'ok' => $exitCode === 0,
+            'exitCode' => $exitCode,
+            'stdout' => $stdout,
+            'stderr' => $stderr,
         ]);
         exit;
     }
     
-    if ($returnCode === 0) {
+    if ($exitCode === 0) {
         $_SESSION['success_message'] = 'JSON feed updated successfully! Generated at ' . date('g:i:s A');
     } else {
-        $_SESSION['error_message'] = 'Failed to update JSON feed. Error: ' . implode(' ', $output);
+        $_SESSION['error_message'] = 'Failed to update JSON feed. ' . ($stderr ?: $stdout);
     }
     
 } catch (Exception $e) {

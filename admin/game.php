@@ -524,6 +524,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const data = await res.json();
                     text = 'exitCode: ' + (data.exitCode ?? 'n/a');
                     if (data.stdout) text += '\n\n' + data.stdout;
+                    if (data.stderr) text += '\n\nSTDERR:\n' + data.stderr;
                     if (data.error && !data.ok) text += '\n\nError: ' + data.error;
                 } else {
                     const t = await res.text();
