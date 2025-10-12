@@ -111,10 +111,12 @@ try {
         $data = [
             'cache_control' => 'no-store',
             'generated_at' => $generatedAt,
-            'game' => [
+'game' => [
                 'title' => $liveGame['title'],
                 'home_team' => $liveGame['home_team'],
                 'away_team' => $liveGame['away_team'],
+                'home_abbrev' => $liveGame['home_abbrev'] ?? null,
+                'away_abbrev' => $liveGame['away_abbrev'] ?? null,
                 'score' => [
                     'home' => (int)$liveGame['score_home'],
                     'away' => (int)$liveGame['score_away']

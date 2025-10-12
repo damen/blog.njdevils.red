@@ -162,6 +162,8 @@ chown www-data:www-data public public/uploads  # or appropriate PHP-FPM user
     "title": "Devils vs Rangers - Season Opener",
     "home_team": "Devils",
     "away_team": "Rangers", 
+    "home_abbrev": "NJD",
+    "away_abbrev": "NYR",
     "score": {"home": 2, "away": 1},
     "home_lineup": "Palat - Hughes - Bratt\nMeier - Hischier - Mercer\nGritsyuk - Glass - Brown\nCotter - Glendening - MacEwan\n\nHughes - Pesce\nSiegenthaler - Hamilton\nDillon - Nemec\n\nMarkstrom\nAllen",
     "away_lineup": "...",

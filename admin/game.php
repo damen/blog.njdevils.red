@@ -45,6 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $title = trim($_POST['title'] ?? '');
                 $homeTeam = trim($_POST['home_team'] ?? '');
                 $awayTeam = trim($_POST['away_team'] ?? '');
+                
+                // Team abbreviations (optional) - normalize to uppercase and validate
+                $homeAbbrev = strtoupper(trim($_POST['home_abbrev'] ?? ''));
+                $awayAbbrev = strtoupper(trim($_POST['away_abbrev'] ?? ''));
                 $scoreHome = (int)($_POST['score_home'] ?? 0);
                 $scoreAway = (int)($_POST['score_away'] ?? 0);
                 
@@ -64,6 +68,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (strlen($title) > 255) $errors[] = 'Title is too long (max 255 characters).';
                 if (strlen($homeTeam) > 100) $errors[] = 'Home team name is too long (max 100 characters).';
                 if (strlen($awayTeam) > 100) $errors[] = 'Away team name is too long (max 100 characters).';
+                if ($homeAbbrev !== '' && !preg_match('/^[A-Z]{2,4}$/', $homeAbbrev)) $errors[] = 'Home team abbreviation must be 2–4 letters.';
+                if ($awayAbbrev !== '' && !preg_match('/^[A-Z]{2,4}$/', $awayAbbrev)) $errors[] = 'Away team abbreviation must be 2–4 letters.';
                 if ($scoreHome < 0 || $scoreHome > 99) $errors[] = 'Home team score must be between 0 and 99.';
                 if ($scoreAway < 0 || $scoreAway > 99) $errors[] = 'Away team score must be between 0 and 99.';
                 
@@ -74,15 +80,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if ($game) {
                             // Update existing game
                             Db::execute(
-                                'UPDATE games SET title = ?, home_team = ?, away_team = ?, score_home = ?, score_away = ?, home_lineup_text = ?, away_lineup_text = ?, updated_at = NOW() WHERE id = ?',
-                                [$title, $homeTeam, $awayTeam, $scoreHome, $scoreAway, $homeLineupText, $awayLineupText, $game['id']]
+'UPDATE games SET title = ?, home_team = ?, away_team = ?, home_abbrev = ?, away_abbrev = ?, score_home = ?, score_away = ?, home_lineup_text = ?, away_lineup_text = ?, updated_at = NOW() WHERE id = ?'
+[$title, $homeTeam, $awayTeam, $homeAbbrev, $awayAbbrev, $scoreHome, $scoreAway, $homeLineupText, $awayLineupText, $game['id']]
                             );
                             $success = 'Game updated successfully.';
                         } else {
                             // Create new game
                             $stmt = Db::execute(
-                                'INSERT INTO games (title, home_team, away_team, score_home, score_away, home_lineup_text, away_lineup_text) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                                [$title, $homeTeam, $awayTeam, $scoreHome, $scoreAway, $homeLineupText, $awayLineupText]
+'INSERT INTO games (title, home_team, away_team, home_abbrev, away_abbrev, score_home, score_away, home_lineup_text, away_lineup_text) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+[$title, $homeTeam, $awayTeam, $homeAbbrev, $awayAbbrev, $scoreHome, $scoreAway, $homeLineupText, $awayLineupText]
                             );
                             $gameId = Db::pdo()->lastInsertId();
                             $success = 'Game created successfully.';
@@ -200,6 +206,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             [$game['id'], $type, $sanitizedContent, $sanitizedUrl]
                         );
                         $success = 'Update added successfully.';
+                        
+                        // Auto-regenerate JSON feed if this game is live
+                        if (!empty($game['is_live'])) {
+                            try {
+                                $updateScriptPath = __DIR__ . '/../update.php';
+                                // Resolve PHP binary
+                                $phpCandidates = [];
+                                if (defined('PHP_BINARY') && PHP_BINARY) { $phpCandidates[] = PHP_BINARY; }
+                                $phpCandidates = array_merge($phpCandidates, [
+                                    '/usr/bin/php', '/usr/local/bin/php', '/bin/php',
+                                    '/usr/bin/php8.3', '/usr/bin/php8.2', '/usr/bin/php8.1', '/usr/bin/php8.0'
+                                ]);
+                                $phpBin = null;
+                                foreach ($phpCandidates as $cand) {
+                                    if (is_file($cand) && is_executable($cand)) { $phpBin = $cand; break; }
+                                }
+                                if ($phpBin === null) { $phpBin = 'php'; }
+                                if (function_exists('proc_open')) {
+                                    $descriptors = [1 => ['pipe','w'], 2 => ['pipe','w']];
+                                    $cwd = dirname(__DIR__);
+                                    $proc = proc_open([$phpBin, $updateScriptPath], $descriptors, $pipes, $cwd);
+                                    if (is_resource($proc)) {
+                                        if (isset($pipes[1])) { stream_get_contents($pipes[1]); fclose($pipes[1]); }
+                                        if (isset($pipes[2])) { stream_get_contents($pipes[2]); fclose($pipes[2]); }
+                                        proc_close($proc);
+                                    }
+                                } elseif (function_exists('exec')) {
+                                    @exec(escapeshellarg($phpBin).' '.escapeshellarg($updateScriptPath).' >/dev/null 2>&1');
+                                }
+                            } catch (Throwable $t) {
+                                // Silent failure; cron will refresh on next tick
+                            }
+                        }
+                        
                         // Clear POST fields so the form resets
                         $_POST = [];
                     } catch (Exception $e) {
@@ -278,6 +318,11 @@ renderAdminHeader($game ? 'Edit Game' : 'Create Game', 'game');
                         maxlength="100"
                         placeholder="e.g., Rangers"
                     >
+                    <div style="margin-top:6px;">
+                        <label for="away_abbrev" style="font-weight:500;">Away Abbrev</label>
+                        <input type="text" id="away_abbrev" name="away_abbrev" value="<?= Helpers::escapeHtml($game['away_abbrev'] ?? '') ?>" maxlength="4" placeholder="NYR" style="max-width:120px;">
+                        <small class="form-text">2–4 letters (e.g., NYR)</small>
+                    </div>
                 </div>
                 <div class="form-col">
                     <label for="home_team">Home Team *</label>
@@ -290,6 +335,11 @@ renderAdminHeader($game ? 'Edit Game' : 'Create Game', 'game');
                         maxlength="100"
                         placeholder="e.g., Devils"
                     >
+                    <div style="margin-top:6px;">
+                        <label for="home_abbrev" style="font-weight:500;">Home Abbrev</label>
+                        <input type="text" id="home_abbrev" name="home_abbrev" value="<?= Helpers::escapeHtml($game['home_abbrev'] ?? '') ?>" maxlength="4" placeholder="NJD" style="max-width:120px;">
+                        <small class="form-text">2–4 letters (e.g., NJD)</small>
+                    </div>
                 </div>
             </div>
             

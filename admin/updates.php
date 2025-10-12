@@ -123,6 +123,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         
                         $success = 'Update added successfully.';
                         
+                        // Trigger JSON feed regeneration automatically
+                        try {
+                            $updateScriptPath = __DIR__ . '/../update.php';
+                            // Resolve PHP binary
+                            $phpCandidates = [];
+                            if (defined('PHP_BINARY') && PHP_BINARY) { $phpCandidates[] = PHP_BINARY; }
+                            $phpCandidates = array_merge($phpCandidates, [
+                                '/usr/bin/php', '/usr/local/bin/php', '/bin/php',
+                                '/usr/bin/php8.3', '/usr/bin/php8.2', '/usr/bin/php8.1', '/usr/bin/php8.0'
+                            ]);
+                            $phpBin = null;
+                            foreach ($phpCandidates as $cand) {
+                                if (is_file($cand) && is_executable($cand)) { $phpBin = $cand; break; }
+                            }
+                            if ($phpBin === null) { $phpBin = 'php'; }
+                            if (function_exists('proc_open')) {
+                                $descriptors = [1 => ['pipe','w'], 2 => ['pipe','w']];
+                                $cwd = dirname(__DIR__);
+                                $proc = proc_open([$phpBin, $updateScriptPath], $descriptors, $pipes, $cwd);
+                                if (is_resource($proc)) {
+                                    // consume streams and close
+                                    if (isset($pipes[1])) { stream_get_contents($pipes[1]); fclose($pipes[1]); }
+                                    if (isset($pipes[2])) { stream_get_contents($pipes[2]); fclose($pipes[2]); }
+                                    proc_close($proc);
+                                }
+                            } elseif (function_exists('exec')) {
+                                @exec(escapeshellarg($phpBin).' '.escapeshellarg($updateScriptPath).' >/dev/null 2>&1');
+                            }
+                        } catch (Throwable $t) {
+                            // Silent failure; cron will refresh on next tick
+                        }
+                        
                         // Clear form data after successful submission
                         $_POST = [];
                         

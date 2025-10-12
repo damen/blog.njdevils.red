@@ -352,6 +352,13 @@
             const game = data.game;
             const updates = data.updates || [];
             
+            // Compute logo URLs from team abbreviations
+            const logoBase = 'https://assets.nhle.com/logos/nhl/svg/';
+            const awayAbbrev = (game.away_abbrev || '').trim();
+            const homeAbbrev = (game.home_abbrev || '').trim();
+            const awayLogo = awayAbbrev ? `${logoBase}${awayAbbrev}_dark.svg` : null;
+            const homeLogo = homeAbbrev ? `${logoBase}${homeAbbrev}_dark.svg` : null;
+            
             let html = `
                 <div class="game-card">
                     <div class="game-card-header">Live Game</div>
@@ -360,9 +367,11 @@
                         <h2>${escapeHtml(game.title)}</h2>
                         
                         <div class="score">
+                            ${awayLogo ? `<img src="${escapeHtml(awayLogo)}" alt="${escapeHtml(awayAbbrev)}" style="height:28px;vertical-align:middle;margin-right:6px;"/>` : ''}
                             ${escapeHtml(game.away_team)} ${game.score.away}
                             <span class="vs">-</span>
                             ${game.score.home} ${escapeHtml(game.home_team)}
+                            ${homeLogo ? `<img src="${escapeHtml(homeLogo)}" alt="${escapeHtml(homeAbbrev)}" style="height:28px;vertical-align:middle;margin-left:6px;"/>` : ''}
                         </div>
                         
                         <div class="last-updated">
