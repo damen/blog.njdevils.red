@@ -95,10 +95,7 @@ $cacheVersion = Helpers::timestamp();
             </div>
         </form>
 
-        <div style="text-align: center; margin-top: 30px; font-size: 14px; color: #888;">
-            <p>Default credentials: admin / admin</p>
-            <p>Change these in your .env file</p>
-        </div>
+
     </div>
 </body>
 </html>
